@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Sample website using Bootstrap and ExpressJS</title>
+
+    <!---CDN Links-->
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+    <script src="../website.js"></script>
+    <style>
+        .flex-container {
+            height: 100%;
+            padding: 0;
+            margin: 0;
+            display: -webkit-box;
+            display: -moz-box;
+            display: -ms-flexbox;
+            display: -webkit-flex;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    </style>
+    <script>
+        function checkWebsite() {
+            if (true) {
+                window.location.replace("dashboard")
+            }
+        }
+
+        function createRandomImage() {
+            var canvas = document.createElement('canvas');
+            canvas.width = canvas.height = 50;
+            var ctx = canvas.getContext('2d');
+            var imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+            function randomInt(min, max) {
+                return Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+
+            var randomRgb = [randomInt(0, 255), randomInt(0, 255), randomInt(0, 255)]
+
+            for (var i = 0; i < imgData.data.length; i += 4) {
+                // imgData.data[i] = randomInt(0, 255); // red
+                // imgData.data[i+1] = randomInt(0, 255); // green
+                // imgData.data[i+2] = randomInt(0, 255); // blue
+                // imgData.data[i+3] = 255; // alpha
+                if (Math.random() <0.5) {
+                    imgData.data[i] = randomRgb[0]; // red
+                    imgData.data[i+1] = randomRgb[1]; // green
+                    imgData.data[i+2] = randomRgb[2]; // blue
+                    imgData.data[i+3] = 255; // alpha
+                } else {
+                    imgData.data[i] = 255
+                    imgData.data[i+1] = 255
+                    imgData.data[i+2] = 255
+                    imgData.data[i+3] = 255; // alpha
+                }
+            }
+
+            ctx.putImageData(imgData, 0, 0);
+            var image = new Image();
+            image.id = "pic"
+            image.src = canvas.toDataURL();
+            var div = document.getElementById("content");
+            div.innerHTML = ""
+            var paragraph = document.createElement("p")
+            var input = document.createElement("button")
+            var t = document.createTextNode("Check");
+            var a = document.createElement("a")
+            a.href = "/dashboard"
+            input.appendChild(a);
+            input.appendChild(t)
+            input.type = "button"
+            input.value = "Check"
+            input.onclick = checkWebsite;
+            div.appendChild(paragraph);
+            paragraph.innerHTML = "Please temporarily replace your profile picture with this image"
+            paragraph.appendChild(document.createElement("br"));
+            paragraph.appendChild(image)
+            paragraph.appendChild(document.createElement("br"));
+            paragraph.appendChild(document.createElement("br"));
+            paragraph.appendChild(input)
+        }
+        //$(document).ready(createRandomImage)
+    </script>
+</head>
+<body>
+<div>
+    <div><nav class="navbar navbar-inverse" role="navigation" style="padding-left:130px;">
+        <ul class="nav navbar-nav">
+            <li class="active"><a href="/">Home<span class="sr-only">(current)</span></a></li>
+            <li><a href="/dashboard">Dashboard</a></li>
+            <li><a href="/about">About us</a></li>
+        </ul>
+    </nav>
+    </div>
+    <br/>
+    <div id="content" class="jumbotron flex-container">
+        <p>
+            Ethereum Address: <input type = "text"/><br />
+            Website: <input type = "text"/><br />
+            <input onclick="createRandomImage()" type="button" value="Claim website"></input>
+        </p>
+    </div>
+</div>
+</body>
+</html>

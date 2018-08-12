@@ -1,0 +1,9 @@
+{
+  "db": {
+    "test": "test",
+    "https:__www.twitch.tv_ninja": "0xa232ba91defbe3bb5c128fa85e70f35fdc0bf47f",
+    "0xa232ba91defbe3bb5c128fa85e70f35fdc0bf47f": [
+      "https:__www.twitch.tv_ninja"
+    ]
+  }
+}

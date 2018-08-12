@@ -1,0 +1,713 @@
+<html>
+<head>
+    <script src="C:\Users\alex\Downloads\extensionizr_custom1533780541756\ext\database.js"></script>
+    <link rel="stylesheet" href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css">
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.1/js/bootstrap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/bluebird/latest/bluebird.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ethjs@0.3.0/dist/ethjs.min.js"></script>
+</head>
+<style>
+    .thumbnail-container {
+        display: inline-block;
+        padding-left: 10%;
+    }
+    #head {
+        padding-left: 10%;
+    }
+
+    #etherlog {
+        padding-left: 6%;
+        padding-bottom: 5%;
+        font-size: 20px;
+        background-color: rgba(233, 233, 233, 0.2)
+    }
+     .flex-container {
+         height: 100%;
+         padding: 0;
+         margin: 0;
+         display: -webkit-box;
+         display: -moz-box;
+         display: -ms-flexbox;
+         display: -webkit-flex;
+         display: flex;
+         align-items: center;
+         justify-content: center;
+     }
+
+    .bigText {
+        font-size: 85px;
+        font-family: Arial Black;
+
+
+    }
+
+    h3 {
+        font-size: 40px;
+    }
+
+    html {
+        background:  url(https://cdn-images-1.medium.com/max/1000/1*1uIttjuEz_Ry7EghgQnHkA.gif) no-repeat center center fixed;
+        background-size: cover;
+    }
+    h1{
+        font-family: 'Advent Pro', sans-serif;
+        font-size: 3em;
+        margin: .2em .5em;
+        background-color: transparent;
+    }
+    body {
+        color:black;
+        height: 100%;
+        background-color: transparent;
+    }
+
+    #meme, #content {
+        background-color: transparent;
+    }
+
+    .but-color {
+        color:black;
+    }
+
+</style>
+<script>
+    String.prototype.replaceAll = function(search, replacement) {
+        var target = this;
+        return target.replace(new RegExp(search, 'g'), replacement);
+    };
+    function createThumbnails(url) {
+        url = url.replace("watch?v=", "embed/")
+        url = url.replace("www.twitch.tv/", "player.twitch.tv?channel=")
+        console.log(url)
+        var container = document.createElement("div")
+        var thumbnail = document.createElement("div")
+        var site = document.createElement("iframe")
+        container.className = "thumbnail-container"
+        thumbnail.className = "thumbnail"
+        site.src = url
+        site.frameborder = 0
+        container.appendChild(thumbnail);
+        thumbnail.appendChild(site);
+        document.getElementById("main").appendChild(container);
+    }
+
+    var address = getParameterByName("address");
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", "http://localhost:3001/db");
+    xhr.onload = function () {
+        console.log(xhr.response);
+
+        database = JSON.parse(xhr.response)["db"];
+        var website = getParameterByName("website");
+        for (var key in database) {
+            if (key == address) {
+                var arr = database[key]
+                if (arr.length == 0) {
+                    createThumbnails(getParameterByName("website"))
+
+                }
+                for (var i = 0; i < arr.length; i++) {
+                    let thumbnailSite = arr[i].replaceAll("_", "/")
+                    console.log(website)
+                    console.log(thumbnailSite)
+                    if (website == thumbnailSite) {
+                        createThumbnails(thumbnailSite);
+                    }
+                }
+            }
+        }
+        website = website.replaceAll("/", "_")
+        var xhr2 = new XMLHttpRequest();
+        xhr2.open("POST", "http://localhost:3001/db", true);
+        xhr2.setRequestHeader('Content-type', 'application/json');
+        database[website] = address;
+        if (address in database) {
+            if (database[address].indexOf(website) == -1)
+                database[address].push(website);
+        } else {
+            database[address] = [website];
+        }
+
+
+
+        var data = JSON.stringify(database)
+        console.log(data)
+        xhr2.send(data);
+    }
+    xhr.onerror = function () {
+        done(xhr.response);
+    };
+    xhr.send();
+
+    window.addEventListener('load', function() {
+        // Check if Web3 has been injected by the browser:
+        if (typeof web3 !== 'undefined') {
+            // You have a web3 browser! Continue below!
+            startApp(web3);
+        } else {
+            // Warn the user that they need to get a web3 browser
+            // Or install MetaMask, maybe with a nice graphic.
+        }
+    });
+
+    const contract_address = '0x2152FAb1b2978DAe826991E34FD0f803f62EE79d';
+    var eth = null;
+    function startApp(web3) {
+        //alert("entro");
+        document.getElementById("etherlog").innerHTML = "<h3><strong>Website added successfully</strong></h3><br/>";
+        eth = new Eth(web3.currentProvider);
+        //alert("llego");
+        web3.eth.getBalance(contract_address, function (error, result) {
+            try {
+                if (!error){
+                    console.log('Ether:', web3.fromWei(result,'ether'));
+                    document.getElementById("etherlog").innerHTML+=  web3.fromWei(result,'ether') + " ETH Account Balance<br>";
+                }else
+                    console.log('Error: ', error);
+            } catch ( err ) {
+                console.log('Error: ', err.message);
+            }});
+
+        var addr = web3.eth.accounts[0];
+        var contractAddr = ('0x2152FAb1b2978DAe826991E34FD0f803f62EE79d');
+        // Get the address ready for the call, substring removes the '0x', as its not required
+        var tknAddress = (addr).substring(2);
+        // '0x70a08231' is the contract 'balanceOf()' ERC20 token function in hex. A zero buffer is required and then we add the previously defined address with tokens
+        var contractData = ('0x70a08231000000000000000000000000' + tknAddress);
+        web3.eth.call({
+            to: contractAddr, // Contract address, used call the token balance of the address in question
+            data: contractData // Combination of contractData and tknAddress, required to call the balance of an address
+        }, function(err, result) {
+            if (result) {
+                console.log('Tokens Owned: ' + web3.fromWei(result, 'ether')); // Change the string to be in Ether not Wei, and show it in the console
+                document.getElementById("etherlog").innerHTML+=  web3.fromWei(result,'ether') + " Tokens Account Balance<br>";
+
+            } else {
+                console.log(err); // Dump errors here
+            }
+        });
+
+        // var ethTx = ('0x20037a996e83b5ba3dd9e75e6e6af6d50e60b6ee73c2a706df2172f80a18c34b');
+        // web3.eth.getTransaction(ethTx, function(err, result) {
+        //     if (!err) {
+        //         document.getElementById("etherlog").innerHTML+= 'Tx 0x20037a996e83b5ba3dd9e75e6e6af6d50e60b6ee73c2a706df2172f80a18c34b' + "<br>";
+        //         console.log('From Address: ' + result.from);
+        //         document.getElementById("etherlog").innerHTML+= 'From Address: ' + result.from + "<br>";
+        //         console.log('To Address: ' + result.to);
+        //         document.getElementById("etherlog").innerHTML+= 'To Address: ' + result.to + "<br>";
+        //         console.log('Ether Transacted: ' + (web3.fromWei(result.value, 'ether')));
+        //         document.getElementById("etherlog").innerHTML+= 'Ether Transacted: ' + (web3.fromWei(result.value, 'ether'))+ "<br>";
+        //     } else {
+        //         console.log('Error!', err);
+        //     }
+        // });
+
+    }
+    function getParameterByName(name, url) {
+        if (!url) url = window.location.href;
+        name = name.replace(/[\[\]]/g, '\\$&');
+        var regex = new RegExp('[?&]' + name + '(=([^&#]*)|&|#|$)'),
+            results = regex.exec(url);
+        if (!results) return null;
+        if (!results[2]) return '';
+        return decodeURIComponent(results[2].replace(/\+/g, ' '));
+    }
+
+    window.onload = function () {
+        var contractAddr = "0x2152FAb1b2978DAe826991E34FD0f803f62EE79d"
+        var addr = web3.eth.accounts[0];
+        var abi = [
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "name": "tokenOwner",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": true,
+                        "name": "spender",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": false,
+                        "name": "tokens",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "Approval",
+                "type": "event"
+            },
+            {
+                "constant": false,
+                "inputs": [],
+                "name": "acceptOwnership",
+                "outputs": [],
+                "payable": false,
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "constant": false,
+                "inputs": [
+                    {
+                        "name": "spender",
+                        "type": "address"
+                    },
+                    {
+                        "name": "tokens",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "approve",
+                "outputs": [
+                    {
+                        "name": "success",
+                        "type": "bool"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "constant": false,
+                "inputs": [
+                    {
+                        "name": "spender",
+                        "type": "address"
+                    },
+                    {
+                        "name": "tokens",
+                        "type": "uint256"
+                    },
+                    {
+                        "name": "data",
+                        "type": "bytes"
+                    }
+                ],
+                "name": "approveAndCall",
+                "outputs": [
+                    {
+                        "name": "success",
+                        "type": "bool"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "constant": false,
+                "inputs": [
+                    {
+                        "name": "to",
+                        "type": "address"
+                    },
+                    {
+                        "name": "tokens",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "transfer",
+                "outputs": [
+                    {
+                        "name": "success",
+                        "type": "bool"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "name": "from",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": true,
+                        "name": "to",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": false,
+                        "name": "tokens",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "Transfer",
+                "type": "event"
+            },
+            {
+                "constant": false,
+                "inputs": [
+                    {
+                        "name": "tokenAddress",
+                        "type": "address"
+                    },
+                    {
+                        "name": "tokens",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "transferAnyERC20Token",
+                "outputs": [
+                    {
+                        "name": "success",
+                        "type": "bool"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "anonymous": false,
+                "inputs": [
+                    {
+                        "indexed": true,
+                        "name": "_from",
+                        "type": "address"
+                    },
+                    {
+                        "indexed": true,
+                        "name": "_to",
+                        "type": "address"
+                    }
+                ],
+                "name": "OwnershipTransferred",
+                "type": "event"
+            },
+            {
+                "constant": false,
+                "inputs": [
+                    {
+                        "name": "from",
+                        "type": "address"
+                    },
+                    {
+                        "name": "to",
+                        "type": "address"
+                    },
+                    {
+                        "name": "tokens",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "transferFrom",
+                "outputs": [
+                    {
+                        "name": "success",
+                        "type": "bool"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "constant": false,
+                "inputs": [
+                    {
+                        "name": "_newOwner",
+                        "type": "address"
+                    }
+                ],
+                "name": "transferOwnership",
+                "outputs": [],
+                "payable": false,
+                "stateMutability": "nonpayable",
+                "type": "function"
+            },
+            {
+                "payable": true,
+                "stateMutability": "payable",
+                "type": "fallback"
+            },
+            {
+                "inputs": [],
+                "payable": false,
+                "stateMutability": "nonpayable",
+                "type": "constructor"
+            },
+            {
+                "constant": true,
+                "inputs": [],
+                "name": "_totalSupply",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [
+                    {
+                        "name": "tokenOwner",
+                        "type": "address"
+                    },
+                    {
+                        "name": "spender",
+                        "type": "address"
+                    }
+                ],
+                "name": "allowance",
+                "outputs": [
+                    {
+                        "name": "remaining",
+                        "type": "uint256"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [
+                    {
+                        "name": "tokenOwner",
+                        "type": "address"
+                    }
+                ],
+                "name": "balanceOf",
+                "outputs": [
+                    {
+                        "name": "balance",
+                        "type": "uint256"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [],
+                "name": "decimals",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "uint8"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [],
+                "name": "name",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "string"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [],
+                "name": "newOwner",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [],
+                "name": "owner",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "address"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [
+                    {
+                        "name": "a",
+                        "type": "uint256"
+                    },
+                    {
+                        "name": "b",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "safeAdd",
+                "outputs": [
+                    {
+                        "name": "c",
+                        "type": "uint256"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "pure",
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [
+                    {
+                        "name": "a",
+                        "type": "uint256"
+                    },
+                    {
+                        "name": "b",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "safeDiv",
+                "outputs": [
+                    {
+                        "name": "c",
+                        "type": "uint256"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "pure",
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [
+                    {
+                        "name": "a",
+                        "type": "uint256"
+                    },
+                    {
+                        "name": "b",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "safeMul",
+                "outputs": [
+                    {
+                        "name": "c",
+                        "type": "uint256"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "pure",
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [
+                    {
+                        "name": "a",
+                        "type": "uint256"
+                    },
+                    {
+                        "name": "b",
+                        "type": "uint256"
+                    }
+                ],
+                "name": "safeSub",
+                "outputs": [
+                    {
+                        "name": "c",
+                        "type": "uint256"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "pure",
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [],
+                "name": "symbol",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "string"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+            },
+            {
+                "constant": true,
+                "inputs": [],
+                "name": "totalSupply",
+                "outputs": [
+                    {
+                        "name": "",
+                        "type": "uint256"
+                    }
+                ],
+                "payable": false,
+                "stateMutability": "view",
+                "type": "function"
+            }
+        ]
+        var tknAddress = (addr).substring(2);
+        async function getERC20Balance() {
+            var address, contractAddress, contractABI, tokenContract, decimals, balance, name, symbol, adjustedBalance
+            address = addr;
+            contractAddress = contractAddr;
+            contractABI = abi;
+
+            tokenContract = web3.eth.contract(contractABI).at(contractAddress)
+            console.log(tokenContract)
+            decimals = Promise.promisify(cb => tokenContract.decimals(cb))
+            balance = Promise.promisify(cb => tokenContract.balanceOf(address, cb))
+            name = Promise.promisify(cb => tokenContract.name(cb))
+            symbol = Promise.promisify(cb => tokenContract.symbol(cb))
+
+            try {
+                adjustedBalance = await balance / Math.pow(10, await decimals)
+                console.log(adjustedBalance);
+                document.getElementById("output2").innerHTML += " " + await symbol + " (" + await name + ")";
+            } catch (error) {
+                document.getElementById("output2").innerHTML = error;
+            }
+        }
+        getERC20Balance();
+
+    }
+</script>
+<body>
+<div>
+    <div>
+        <nav class="navbar navbar-inverse" role="navigation" style="padding-left:130px;">
+            <ul class="nav navbar-nav">
+                <li><a href="/">Home</a></li>
+        </nav>
+    </div>
+    <br/>
+    <div id="main" class="jumbotron">
+        <div id="etherlog">LOG</div>
+        </p>
+        <p id="head"><strong>Websites currently earning revenue</strong></p>
+    </div>
+</div>
+</body>
+</html>
